@@ -1,0 +1,7 @@
+accounts:
+  - username: username
+    password: password
+
+new_nameservers:
+  - nameserver: ns1
+  - nameserver: ns2
