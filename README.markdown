@@ -1,9 +1,9 @@
 ### Status
-__done__ Log into godaddy.com
-= Navigate to DNS
-= Get all domains
-= For each domain check DNS records
-= Change old DNS records to new DNS records
+__done__ Log into godaddy.com  
+= Navigate to DNS  
+= Get all domains  
+= For each domain check DNS records  
+= Change old DNS records to new DNS records  
 
 ### Configurations
 Username, password, DNS configurations are stored in YAML files in the ````/secure```` folder. See ````/secure/example.yml````.  
