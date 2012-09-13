@@ -2,4 +2,4 @@
 .bundle
 log*
 secure/*
-
+!secure/example.yml
