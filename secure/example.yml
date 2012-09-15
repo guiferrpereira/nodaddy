@@ -1,7 +1,11 @@
 accounts:
-  - username: username
-    password: password
-
-new_nameservers:
-  - nameserver: ns1
-  - nameserver: ns2
+  - username: username1
+    password: password1
+    nameservers_new: 
+      - second.ns.somesite.com
+      - first.ns.somesite.com
+  - username: username2
+    password: password2
+    nameservers_new: 
+      - second.ns.somesite.com
+      - first.ns.somesite.com
