@@ -4,7 +4,6 @@ GEM
     addressable (2.3.2)
     childprocess (0.3.5)
       ffi (~> 1.0, >= 1.0.6)
-    fastercsv (1.5.5)
     ffi (1.1.5)
     libwebsocket (0.1.5)
       addressable
@@ -22,5 +21,4 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  fastercsv
   watir-webdriver

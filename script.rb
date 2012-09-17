@@ -130,6 +130,19 @@ class Logger
 		file = Dir.glob(file_name).empty? ? file_name : Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
 		File.open(file, "w")
 	end
+
+	def timestamp_copy(file)
+		name = file.split(".")[0]
+		type = file.split(".")[1]
+
+		new_file = Time.now.strftime("%Y%m%dT%H%M%S%z") + "." + name + "." + type
+		FileUtils.cp file, new_file
+	end
+
+	def timestamp_remove(file)
+		timestamp_copy(file)
+		FileUtils.rm file
+	end
 end
 
 
@@ -155,41 +168,33 @@ api = GoDaddyAPI.new( account[:username], account[:password] )
 # Get domains for account
 # Save domains to yaml file
 # 
-@domain_logger = Logger.yaml("domains.yml")
-@domain_logger.sync = true
+@domain_logger = Logger.yaml("log_domains.yml")
 api.log_domains(@domain_logger)
-
-# Close yaml file (in preparation for others to access it)
-# 
 @domain_logger.close
 
 # Open domains list. Load into variable
 # 
-domain_list = YAML::load(File.open("domains.yml"))
+domain_list = YAML::load(File.open("log_domains.yml"))
 
 # Create "operations" and "inactive domains list" loggers
 # 
-@ops_logger = Logger.yaml("ops_logger.yml")
-@ops_logger.sync = true
-@inactive_logger = Logger.yaml("domains_inactive.yml")
-@inactive_logger.sync = true
-@error_logger = Logger.yaml("errors.yml")
-@error_logger.sync = true
-
+@ops_logger 			= Logger.yaml("log_ops.yml")
+@inactive_logger 	= Logger.yaml("log_inactive.yml")
+@error_logger 		= Logger.yaml("log_errors.yml")
 
 # Loop through domain list domains. 
 # 
 domain_list[:domains].each_with_index do |domain, i|
-
 	# Show status in the terminal
 	# 
 	percent = "%.0f" % ((i*100.0)/domain_list[:domains].size)
 	puts "== #{i} of #{domain_list[:domains].size} - #{percent}%"
+	puts "-- manage " + domain[:domain]
 
 	# Select acitve domains
 	# 
 	if domain[:status].include?("Active")
-		puts "-- manage " + domain[:domain]
+		puts "-- changing nameservers"
 		api.goto_domain_manager(domain[:domain])
 		result = api.change_nameservers(domain[:domain],account[:ns_new])
 		@ops_logger << result.to_yaml
@@ -199,6 +204,8 @@ domain_list[:domains].each_with_index do |domain, i|
 	# Select inactive domains
 	# 
 	else		
+		puts "-- no edits to #{domain[:domain]}"
+		
 		hash = {domain: domain[:domain], error: 'domain inactive'}
 		
 		@ops_logger 			<< hash.to_yaml
@@ -214,12 +221,8 @@ end
 
 # Append log files with timestamps
 # 
-timestamped_domains 	= "domains."          	+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
-timestamped_inactive 	= "domains_inactive." 	+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
-timestamped_ops 			= "ops_logger."        	+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
-timestamped_errors 		= "errors."   					+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
-
-FileUtils.mv "domains.yml",						timestamped_domains
-FileUtils.mv "domains_inactive.yml",  timestamped_inactive
-FileUtils.mv "ops_logger.yml", 				timestamped_ops
-FileUtils.mv "errors.yml", 						timestamped_errors
+util = Logger.new
+util.timestamp_remove("log_domains.yml")
+util.timestamp_remove("log_inactive.yml")
+util.timestamp_remove("log_ops.yml")
+util.timestamp_remove("log_errors.yml")
