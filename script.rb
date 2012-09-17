@@ -1,7 +1,14 @@
+#! /bin/ruby
+
+# ruby built in tools
 require 'yaml'
-require 'watir-webdriver'
 require 'csv'
 
+# gems
+require 'watir-webdriver'
+
+
+# ------------------------------------------------------------------------------
 class GoDaddyAPI
 
 	def initialize(username, password)
@@ -17,8 +24,6 @@ class GoDaddyAPI
 		@browser.text_field(title: "Enter Username").set(u)
 		@browser.text_field(title: "Enter Password").set(p)
 		@browser.link(id: "pc-loginSubmitBtn").click
-
-		return true
 	end
 
 	def browser 
@@ -26,7 +31,6 @@ class GoDaddyAPI
 	end
 
 	def log_domains(file_writer)
-		check_browser
 		goto_domains
 
 		table = @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains')
@@ -47,19 +51,12 @@ class GoDaddyAPI
 		file_writer << output.to_yaml
 	end
 
-	def check_browser
-		puts "@browser is nil" if @browser.nil?
-	end
-
 	def goto_domains
-		check_browser
-
 		# go to domains center
 		@browser.goto("https://mya.godaddy.com/products/ControlPanelLaunch/ControlPanelLaunch.aspx?accordionId=1&generic=true")
 	end
 
 	def goto_domain_manager(domain)
-		check_browser
 		goto_domains
 		
 		@browser.a(text: domain).click
@@ -67,45 +64,61 @@ class GoDaddyAPI
 	end
 
 	def change_nameservers(domain, new_ns)
-		check_browser
+		hash = { domain: domain, ns_old: [], ns_new: [], change_date: nil, errors: []}
 
-		@browser.a(id: 'ctl00_cphMain_lnkNameserverUpdate').click
-		@browser.frame(id: 'ifrm').wait_until_present(10)
-
-		# log old nameservers 
-		1.upto(4) do |index|
-			old_ns = @browser.frame(id: 'ifrm').input(id: "ctl00_cphAction1_ctl00_txtNameserver#{index}").value
-			@logger << ["#{domain}", "Old NS #{index}: #{old_ns}"]
-		end
-
-		# input values for new nameservers
-		new_ns.each_with_index do |ns, index|
-			index += 1 
-			if index > 4
-				msg = "Only 4 Nameservers are supported -- exiting script"
-				logger << msg
-				abort(msg)
-			end
-
-			@browser.frame(id: 'ifrm').text_field(id: "ctl00_cphAction1_ctl00_txtNameserver#{index}").set(ns)
-			@logger << [domain, "New NS #{index}: #{ns}"]
+		begin
+			@browser.a(id: 'ctl00_cphMain_lnkNameserverUpdate').click
+			@browser.frame(id: 'ifrm').wait_until_present(10)
+		rescue Exception => e
+			msg = "DOMAIN: #{domain} -- " + e.to_s
+			hash[:errors].push(msg)
 		end
 		
-		# submit new nameserver values
-		@browser.frame(id: 'ifrm').a(text: 'OK').click
-		@browser.frame(id: 'ifrm').div(id: 'ctl00_cphAction1_ctl01_pnlReadOnly').wait_until_present
-		@browser.frame(id: 'ifrm').a(text: 'OK').click
-	end
+		unless hash[:errors].nil?
+			begin
+				# log old nameservers 
+				0.upto(3) do |index|
+					old_ns = @browser.frame(id: 'ifrm').input(id: "ctl00_cphAction1_ctl00_txtNameserver#{index + 1}").value
+					hash[:ns_old].push(old_ns)
+				end
+			rescue Exception => e
+				msg = "DOMAIN: #{domain} :: old nameservers -- " + e.to_s
+				hash[:errors].push(msg)
+			end
+		end	
 
+		unless hash[:errors].nil?
+			begin
+				# input values for new nameservers
+				new_ns.each_with_index do |new_ns, index|
+					@browser.frame(id: 'ifrm').text_field(id: "ctl00_cphAction1_ctl00_txtNameserver#{index + 1}").set(new_ns)
+					hash[:ns_new].push(new_ns)
+				end
+			rescue Exception => e
+				meg = "DOMAIN: #{domain} :: new nameservers -- " + e.to_s
+				hash[:errors].push(msg)
+			end
+		end
+
+		unless hash[:errors].nil?
+			begin
+				# submit new nameserver values
+				@browser.frame(id: 'ifrm').a(text: 'OK').click
+				@browser.frame(id: 'ifrm').div(id: 'ctl00_cphAction1_ctl01_pnlReadOnly').wait_until_present
+				@browser.frame(id: 'ifrm').a(text: 'OK').click
+			rescue Exception => e
+				msg = "DOMAIN: #{domain} :: submitting namservers -- " + e.to_s
+				hash[:errors].push(msg)
+			end
+
+			hash[:change_date] = Time.now
+		end
+
+		return hash
+	end
 end
 
-
-class Domain
-	def self.hash
-		{ domain: '', ns_old: [], ns_new: [], status: nil, date_expire: nil, ns_changed_date: nil, errors: nil}
-	end
-end
-
+# ------------------------------------------------------------------------------
 class Logger
 	def self.csv
 		log_filename = Dir.glob("log.csv").empty? ? "log.csv" : Time.now.strftime("%Y%m%dT%H%M%S%z") + ".csv"
@@ -120,51 +133,93 @@ class Logger
 end
 
 
+# ==============================================================================
+#  GoDaddy Script
+# ==============================================================================
 
 
+# Load accounts
+# 
 godaddy = YAML::load( File.open( 'secure/godaddy_accounts.yml' ) )
+
+# Select account
+# (Currently only used with 1 account, but expandable to multipe accounts.)
+# 
 account = godaddy[:accounts].first
 
+
+# Log into GoDaddy
+# 
 api = GoDaddyAPI.new( account[:username], account[:password] )
 
+# Get domains for account
+# Save domains to yaml file
+# 
 @domain_logger = Logger.yaml("domains.yml")
 @domain_logger.sync = true
 api.log_domains(@domain_logger)
+
+# Close yaml file (in preparation for others to access it)
+# 
 @domain_logger.close
 
-# domain_list = YAML::load(File.open("domains.yml"))
+# Open domains list. Load into variable
+# 
+domain_list = YAML::load(File.open("domains.yml"))
 
-# domain_list[:domains].each do |domain|
-# end
+# Create "operations" and "inactive domains list" loggers
+# 
+@ops_logger = Logger.yaml("ops_logger.yml")
+@ops_logger.sync = true
+@inactive_logger = Logger.yaml("domains_inactive.yml")
+@inactive_logger.sync = true
+@error_logger = Logger.yaml("errors.yml")
+@error_logger.sync = true
 
 
+# Loop through domain list domains. 
+# 
+domain_list[:domains].each_with_index do |domain, i|
 
-# api.login(account)
+	# Show status in the terminal
+	# 
+	percent = "%.0f" % ((i*100.0)/domain_list[:domains].size)
+	puts "== #{i} of #{domain_list[:domains].size} - #{percent}%"
 
-	# puts "== recognized #{domains.size}"
+	# Select acitve domains
+	# 
+	if domain[:status].include?("Active")
+		puts "-- manage " + domain[:domain]
+		api.goto_domain_manager(domain[:domain])
+		result = api.change_nameservers(domain[:domain],account[:ns_new])
+		@ops_logger << result.to_yaml
 
-	# domains.each_with_index do |d, i|
-	# 	percent = "%.0f" % ((i*100.0)/domains.size)
+		@error_logger << result.to_yaml unless result[:errors].nil?
+
+	# Select inactive domains
+	# 
+	else		
+		hash = {domain: domain[:domain], error: 'domain inactive'}
 		
-	# 	puts ""
-	# 	puts "== #{i} of #{domains.size} - #{percent}%"
-		
-	# 	api.goto_domain_manager(d[0])
-	# 	puts "-- managing #{d[0]}"		
+		@ops_logger 			<< hash.to_yaml
+		@inactive_logger	<< hash.to_yaml
+	end
+end
 
-	# 	puts "---- status: #{d[2]}"
-		
-	# 	if d[2].include?("Active")
-	# 		puts "---- changing nameservers"
-			
-	# 		# catch webdriver errors
-	# 		begin
-	# 			api.change_nameservers(d[0], account['nameservers_new'])
-	# 		rescue => e
-	# 			# this error has been causing most of the errors
-	# 			# Selenium::WebDriver::Error::StaleElementReferenceError
+# Close loggers
+# 
+@ops_logger.close
+@inactive_logger.close
 
-	# 		end
 
-	# 	end
-	# end
+# Append log files with timestamps
+# 
+timestamped_domains 	= "domains."          	+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
+timestamped_inactive 	= "domains_inactive." 	+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
+timestamped_ops 			= "ops_logger."        	+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
+timestamped_errors 		= "errors."   					+ Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
+
+FileUtils.mv "domains.yml",						timestamped_domains
+FileUtils.mv "domains_inactive.yml",  timestamped_inactive
+FileUtils.mv "ops_logger.yml", 				timestamped_ops
+FileUtils.mv "errors.yml", 						timestamped_errors
