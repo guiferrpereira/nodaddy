@@ -4,34 +4,35 @@ require 'csv'
 
 class GoDaddyAPI
 
-	def initialize
-		load_accounts
+	def initialize(username, password)
+		login(username, password)
 	end
 
-	def load_accounts
-		godaddy = YAML::load( File.open( 'secure/godaddy_accounts.yml' ) )
-		@accounts = godaddy["accounts"]
-	end
+	def login(u, p)
+		@browser = Watir::Browser.new :firefox
 
+		#login to godaddy
+		@browser.goto "http://godaddy.com"
+		@browser.link(text: "Log In").click
+		@browser.text_field(title: "Enter Username").set(u)
+		@browser.text_field(title: "Enter Password").set(p)
+		@browser.link(id: "pc-loginSubmitBtn").click
 
-	def accounts 
-		@accounts
+		return true
 	end
 
 	def browser 
 		@browser
 	end
 
-	def domains 
-		@domains
-	end
-	
 	def log_domains(file_writer)
 		check_browser
 		goto_domains
 
 		table = @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains')
 		
+		output = {domains: []}
+
 		begin
 			table.rows.each do |r|
 				hash = Hash.new
@@ -39,26 +40,15 @@ class GoDaddyAPI
 				hash[:date_expire] = r.cells[2].text
 				hash[:status] = r.cells[3].text
 
-				file_writer.write hash.to_yaml
+				output[:domains].push(hash)
 			end
 		end
+
+		file_writer << output.to_yaml
 	end
 
 	def check_browser
 		puts "@browser is nil" if @browser.nil?
-	end
-
-	def login(account)
-		@browser = Watir::Browser.new :firefox
-
-		#login to godaddy
-		@browser.goto "http://godaddy.com"
-		@browser.link(text: "Log In").click
-		@browser.text_field(title: "Enter Username").set(account["username"])
-		@browser.text_field(title: "Enter Password").set(account["password"])
-		@browser.link(id: "pc-loginSubmitBtn").click
-
-		@account = account
 	end
 
 	def goto_domains
@@ -130,15 +120,26 @@ class Logger
 end
 
 
-api = GoDaddyAPI.new
 
-api.accounts.each do |account|
-	
-	@logger = Logger.yaml("domains.yml")
-	@logger.sync = true
 
-	api.login(account)
-	api.log_domains(@logger)
+godaddy = YAML::load( File.open( 'secure/godaddy_accounts.yml' ) )
+account = godaddy[:accounts].first
+
+api = GoDaddyAPI.new( account[:username], account[:password] )
+
+@domain_logger = Logger.yaml("domains.yml")
+@domain_logger.sync = true
+api.log_domains(@domain_logger)
+@domain_logger.close
+
+# domain_list = YAML::load(File.open("domains.yml"))
+
+# domain_list[:domains].each do |domain|
+# end
+
+
+
+# api.login(account)
 
 	# puts "== recognized #{domains.size}"
 
@@ -167,5 +168,3 @@ api.accounts.each do |account|
 
 	# 	end
 	# end
-
-end

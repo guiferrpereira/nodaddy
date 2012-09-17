@@ -1,11 +1,8 @@
-accounts:
-  - username: username1
-    password: password1
-    nameservers_new: 
-      - second.ns.somesite.com
-      - first.ns.somesite.com
-  - username: username2
-    password: password2
-    nameservers_new: 
-      - second.ns.somesite.com
-      - first.ns.somesite.com
+---
+:username: 
+:password: 
+:ns_new: []
+---
+:username: 
+:password: 
+:ns_new: []
