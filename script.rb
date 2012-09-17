@@ -2,34 +2,17 @@ require 'yaml'
 require 'watir-webdriver'
 require 'csv'
 
-
-# log into godaddy
-# navigate to domains
-# 	get all domains > write to log
-# for each domain
-# 	get current domain > write to log 
-# 	change domain > write to log
-#   go to next domain
-# done
-
 class GoDaddyAPI
 
 	def initialize
 		load_accounts
-		config_log
 	end
 
-			def load_accounts
-				godaddy = YAML::load( File.open( 'secure/godaddy_accounts.yml' ) )
-				@accounts = godaddy["accounts"]
-			end
+	def load_accounts
+		godaddy = YAML::load( File.open( 'secure/godaddy_accounts.yml' ) )
+		@accounts = godaddy["accounts"]
+	end
 
-			def config_log
-				# log_filename = Dir.glob("log.txt").empty? ? "log.txt" : Time.now.strftime("%Y%m%dT%H%M%S%z")
-				log_filename = "log.txt"
-				@logger = CSV.open(log_filename, "w")
-				@logger << ['Domain Name', 'Old Nameserver 1', 'New Nameserver 1', 'Old Nameserver 2', 'New Nameserver 2', 'Old Nameserver 3', 'New Nameserver 3', 'Old Nameserver 3', 'New Nameserver 4']
-			end
 
 	def accounts 
 		@accounts
@@ -43,21 +26,22 @@ class GoDaddyAPI
 		@domains
 	end
 	
-	def get_domain_names
+	def log_domains(file_writer)
 		check_browser
 		goto_domains
 
-		result = []
-
 		table = @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains')
-		table.rows.each do |r|
-			
-			# loads 2d array = [domain, expiration date, status]
-			result << [r.cells[1].text, r.cells[2].text, r.cells[3].text]
-		end
+		
+		begin
+			table.rows.each do |r|
+				hash = Hash.new
+				hash[:domain] = r.cells[1].text
+				hash[:date_expire] = r.cells[2].text
+				hash[:status] = r.cells[3].text
 
-		@domains = result
-		return result
+				file_writer.write hash.to_yaml
+			end
+		end
 	end
 
 	def check_browser
@@ -123,66 +107,65 @@ class GoDaddyAPI
 		@browser.frame(id: 'ifrm').a(text: 'OK').click
 	end
 
-	private
-
-		# CURRENTLY NOT USED
-		# gets domain's status summary
-		# def domain_status(domain)
-		# 	active = nil
-
-		# 	@browser.table(id:'tblDomainInfoDetails').trs.each do |r|
-				
-		# 		# get table cell contents
-		# 		cell = r.tds[0].text
-
-		# 		# get the keys
-		# 		key = cell.split(":")[0]
-		# 		key = key.strip if key.class == String
-				
-		# 		# ge the values (some might be nil)
-		# 		value = cell.split(":")[1]
-		# 		value = value.strip if value.class == String
-
-		# 		# determine if site is active
-		# 		active = (value.include?("Active") ? true : false)
-				
-		# 		# log the results
-		# 		@logger << ["#{domain}", "Active", "#{active}"]
-		# 	end
-
-		# 	return active
-		# end
-
 end
 
 
+class Domain
+	def self.hash
+		{ domain: '', ns_old: [], ns_new: [], status: nil, date_expire: nil, ns_changed_date: nil, errors: nil}
+	end
+end
+
+class Logger
+	def self.csv
+		log_filename = Dir.glob("log.csv").empty? ? "log.csv" : Time.now.strftime("%Y%m%dT%H%M%S%z") + ".csv"
+	
+		csv_writer = CSV.open(log_filename, "w")
+	end
+
+	def self.yaml(file_name)
+		file = Dir.glob(file_name).empty? ? file_name : Time.now.strftime("%Y%m%dT%H%M%S%z") + ".yml"
+		File.open(file, "w")
+	end
+end
 
 
 api = GoDaddyAPI.new
+
 api.accounts.each do |account|
 	
+	@logger = Logger.yaml("domains.yml")
+	@logger.sync = true
+
 	api.login(account)
-	
-	# get 2d array of domains, [domain, expiration date, status]
-	domains = api.get_domain_names
-	
-	puts "== recognized #{domains.size}"
+	api.log_domains(@logger)
 
-	domains.each_with_index do |d, i|
-		percent = "%.0f" % ((i*100.0)/domains.size)
-		
-		puts ""
-		puts "== #{i} of #{domains.size} - #{percent}%"
-		
-		api.goto_domain_manager(d[0])
-		puts "-- managing #{d[0]}"		
+	# puts "== recognized #{domains.size}"
 
-		puts "---- status: #{d[2]}"
+	# domains.each_with_index do |d, i|
+	# 	percent = "%.0f" % ((i*100.0)/domains.size)
 		
-		if d[2].include?("Active")
-			puts "---- changing nameservers"
-			api.change_nameservers(d[0], account['nameservers_new'])
-		end
-	end
+	# 	puts ""
+	# 	puts "== #{i} of #{domains.size} - #{percent}%"
+		
+	# 	api.goto_domain_manager(d[0])
+	# 	puts "-- managing #{d[0]}"		
+
+	# 	puts "---- status: #{d[2]}"
+		
+	# 	if d[2].include?("Active")
+	# 		puts "---- changing nameservers"
+			
+	# 		# catch webdriver errors
+	# 		begin
+	# 			api.change_nameservers(d[0], account['nameservers_new'])
+	# 		rescue => e
+	# 			# this error has been causing most of the errors
+	# 			# Selenium::WebDriver::Error::StaleElementReferenceError
+
+	# 		end
+
+	# 	end
+	# end
 
 end
