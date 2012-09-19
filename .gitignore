@@ -1,6 +1,9 @@
 test*
-2012*
 .bundle
-log*
+
+log*.yml
 secure/*
 !secure/example.yml
+
+previous_yml/*.yml
+
