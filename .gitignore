@@ -1,12 +1,13 @@
 pkg/*
+test*.rb
 
 .yardoc/*
 doc/*
 
 .bundle
 *log*.yml
-secure/*
-!secure/example.yml
+config/*
+!config/example.yml
 
 previous_yml/*.yml
 
