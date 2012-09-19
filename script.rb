@@ -11,7 +11,7 @@ NoDaddy::Logging.check_dir_yml
 
 # Load accounts
 # 
-godaddy = YAML::load( File.open( 'secure/godaddy_accounts.yml' ) )
+godaddy = YAML::load( File.open( 'config/godaddy_accounts.yml' ) )
 
 # Select account
 # (Currently only used with 1 account, but expandable to multipe accounts.)

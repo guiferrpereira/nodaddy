@@ -18,5 +18,5 @@ Gem::Specification.new do |gem|
   gem.require_paths = ['lib']
 
   gem.add_dependency 'watir-webdriver'
-  gem.add_dependency 'mongo_mapper'
+  gem.add_dependency 'mongoid'
 end
