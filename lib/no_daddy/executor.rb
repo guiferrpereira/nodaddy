@@ -1,6 +1,6 @@
 require 'watir-webdriver'
 
-class GoDaddyApi::Executor
+class NoDaddy::Executor
 
 	def initialize(username, password)
 		login(username, password)

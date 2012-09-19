@@ -2,7 +2,7 @@ require 'yaml'
 require 'csv'
 
 
-class GoDaddyApi::Domain 
+class NoDaddy::Domain 
 
 end
 

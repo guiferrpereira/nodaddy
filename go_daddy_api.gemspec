@@ -1,11 +1,11 @@
 # -*- encoding: utf-8 -*-
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'go_daddy_api/version'
+require 'no_daddy/version'
 
 Gem::Specification.new do |gem|
-  gem.name          = 'go_daddy_api'
-  gem.version       = GoDaddyApi::VERSION
+  gem.name          = 'no_daddy'
+  gem.version       = NoDaddy::VERSION
   gem.authors       = ["Weston Platter"]  
   gem.email         = ["westonplatter@gmail.com"]
   gem.description   = %q{Automates Go Daddy account management}

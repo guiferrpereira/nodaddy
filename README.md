@@ -6,7 +6,7 @@ Script loads accounts in ````secure/godaddy_accounts.yml````
 
 ## Development Status  
 __done__  Log into godaddy.com  
-__done__  Navigate to DNS  
+__done__  Domains List  
 __done__  Get all domains  
 __done__  For each domain check DNS records  
 __done__  Change old DNS records to new DNS records  

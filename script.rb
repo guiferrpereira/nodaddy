@@ -1,4 +1,4 @@
-require 'go_daddy_api'
+require 'no_daddy'
 
 # ==============================================================================
 #  GoDaddy Script
@@ -7,7 +7,7 @@ require 'go_daddy_api'
 # Check for old yaml files
 # Verbosely moves any yml files to 'previous_yml' folder
 # 
-GoDaddyApi::Logging.check_dir_yml
+NoDaddy::Logging.check_dir_yml
 
 # Load accounts
 # 
@@ -21,12 +21,12 @@ account = godaddy[:accounts].first
 
 # Log into GoDaddy
 # 
-api = GoDaddyApi::Executor.new( account[:username], account[:password] )
+api = NoDaddy::Executor.new( account[:username], account[:password] )
 
 # Get domains for account
 # Save domains to yaml file
 # 
-@domain_logger = GoDaddyApi::Logging.yaml("log_domains.yml")
+@domain_logger = NoDaddy::Logging.yaml("log_domains.yml")
 api.log_domains(@domain_logger)
 @domain_logger.close
 
@@ -36,9 +36,9 @@ domain_list = YAML::load(File.open("log_domains.yml"))
 
 # Create "operations" and "inactive domains list" loggers
 # 
-@ops_logger 			= GoDaddyApi::Logging.yaml("log_ops.yml")      and @ops_logger.sync = true
-@inactive_logger 	= GoDaddyApi::Logging.yaml("log_inactive.yml") and @inactive_logger.sync = true
-@error_logger 		= GoDaddyApi::Logging.yaml("log_errors.yml")		and @error_logger.sync = true
+@ops_logger 			= NoDaddy::Logging.yaml("log_ops.yml")      and @ops_logger.sync = true
+@inactive_logger 	= NoDaddy::Logging.yaml("log_inactive.yml") and @inactive_logger.sync = true
+@error_logger 		= NoDaddy::Logging.yaml("log_errors.yml")		and @error_logger.sync = true
 
 
 # Loop through domain list domains. 
@@ -88,7 +88,7 @@ end
 
 # Append log files with timestamps
 # 
-util = GoDaddyApi::Logging.new
+util = NoDaddy::Logging.new
 util.timestamp_remove("log_domains.yml")
 util.timestamp_remove("log_inactive.yml")
 util.timestamp_remove("log_ops.yml")

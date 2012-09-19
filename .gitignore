@@ -1,7 +1,10 @@
-test*
-.bundle
+pkg/*
 
-log*.yml
+.yardoc/*
+doc/*
+
+.bundle
+*log*.yml
 secure/*
 !secure/example.yml
 

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    go_daddy_api (0.0.1)
+    no_daddy (0.0.1)
       mongo_mapper
       watir-webdriver
 
@@ -45,4 +45,4 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  go_daddy_api!
+  no_daddy!

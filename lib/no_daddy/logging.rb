@@ -1,7 +1,7 @@
 require 'csv'
 require 'yaml'
 
-class GoDaddyApi::Logging
+class NoDaddy::Logging
 	
 	def self.check_dir_yml
 		if Dir.glob("*.yml").size > 0
