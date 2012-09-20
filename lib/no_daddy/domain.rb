@@ -1,5 +1,7 @@
 class NoDaddy::Domain 
 	include Mongoid::Document
+	
+	embeds_one :account
 
 	field :url, 								type: String
 	field :expire_date, 				type: Date
@@ -8,5 +10,9 @@ class NoDaddy::Domain
 	field :in_transfer_process, type: Boolean
 	field :name_servers_old, 		type: Array
 	field :name_servers_new, 		type: Array
-end
+	field :username, 						type: String
+	field :batch, 							type: Integer
 
+	field :created_at,					type: Date
+	field :updated_at, 					type: Date
+end

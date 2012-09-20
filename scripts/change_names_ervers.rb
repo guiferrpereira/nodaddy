@@ -1,14 +1,5 @@
 require 'no_daddy'
 
-# ==============================================================================
-#  GoDaddy Script
-# ==============================================================================
-
-# Check for old yaml files
-# Verbosely moves any yml files to 'previous_yml' folder
-# 
-NoDaddy::Logging.check_dir_yml
-
 # Load accounts
 # 
 godaddy = YAML::load( File.open( 'config/godaddy_accounts.yml' ) )
@@ -17,6 +8,8 @@ godaddy = YAML::load( File.open( 'config/godaddy_accounts.yml' ) )
 # (Currently only used with 1 account, but expandable to multipe accounts.)
 # 
 account = godaddy[:accounts].first
+NoDaddy::Account.new
+
 
 
 # Log into GoDaddy
