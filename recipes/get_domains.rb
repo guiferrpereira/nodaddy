@@ -1,7 +1,6 @@
 #! /bin/ruby
 require 'no_daddy'
 
-
 file_name = File.dirname(__FILE__) + "/../config/godaddy_accounts.yml"
 
 godaddy = YAML::load( File.open( file_name ))
@@ -28,6 +27,9 @@ accounts.each do |account|
 	# login into godaddy
 	executor.login(batch.account.username, batch.account.password)
 
+	puts ""
+	puts "logging: batch " + batch.number.to_s + " - " + batch.account.username
+
 	# log domains
 	executor.goto_domains_list
 	executor.log_domains
@@ -35,6 +37,8 @@ accounts.each do |account|
 	# make batch ready to process
 	batch.ready = true
 	batch.save!
+
+	puts "logging: batch " + batch.number.to_s + " - " + batch.account.username + " -- finished"	
 end
 
 
