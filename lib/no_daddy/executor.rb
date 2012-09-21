@@ -50,12 +50,16 @@ module NoDaddy
 				
 				# log info
 				domain_model[:username]			= @username
-				domain_model[:batch]				= @batch
 				domain_model[:created_at]		= Time.now
 				domain_model[:updated_at]		= Time.now
 
+				# related domain to batch process
+				domain_model.batch = @batch 
+
 				domain_model.save!
 			end
+
+			puts "Number of domains logged = " + table.rows.count.to_s
 		end
 
 		# ----------------------------------------------------------------------------
@@ -68,7 +72,7 @@ module NoDaddy
 		end
 
 		def goto_domain_manager(domain)
-			goto_domains
+			goto_domains_list
 			
 			@browser.a(text: domain).click
 			@browser.input(value: domain).wait_until_present
@@ -79,65 +83,74 @@ module NoDaddy
 		# domain manager page methods
 		# ----------------------------------------------------------------------------
 
+		# Unlock domain for transfer.
+		# Requires browser to be on the domain manager page.
+		# 
 		def unlock
 		end
 
 		# Changes the nameservers.
-		# Requires the brower to be on the domain manger page.
+		# Requires browser to be on the domain manager page.
 		# 
-		def change_nameservers(logger, domain, new_ns)
-			hash = { domain: domain, ns_old: [], ns_new: [], change_date: nil, errors: []}
+		def change_nameservers(domain, nameservers_new)
 
-			begin
-				@browser.a(id: 'ctl00_cphMain_lnkNameserverUpdate').click
-				@browser.frame(id: 'ifrm').wait_until_present(10)
-			rescue Exception => e
-				msg = "DOMAIN: #{domain} -- " + e.to_s
-				hash[:errors].push(msg)
-			end
-			
-			unless hash[:errors].nil?
+			errors = []
+			ns_old = []
+			ns_new = []
+
+			# get name server popup window
+			unless errors.nil?
 				begin
-					# log old nameservers 
+					@browser.a(id: 'ctl00_cphMain_lnkNameserverUpdate').click
+					@browser.frame(id: 'ifrm').wait_until_present(10)
+				rescue Exception => e
+					errors.push(e.to_s)
+				end
+			end
+
+			# log old nameservers 
+			unless errors.nil?
+				begin
 					0.upto(3) do |index|
 						old_ns = @browser.frame(id: 'ifrm').input(id: "ctl00_cphAction1_ctl00_txtNameserver#{index + 1}").value
-						hash[:ns_old].push(old_ns)
+						ns_old.push(old_ns)
 					end
 				rescue Exception => e
-					msg = "DOMAIN: #{domain} :: old nameservers -- " + e.to_s
-					hash[:errors].push(msg)
+					errors.push(e.to_s)
 				end
 			end	
 
-			unless hash[:errors].nil?
+			# set new nameservers
+			unless errors.nil?
 				begin
-					# input values for new nameservers
-					new_ns.each_with_index do |new_ns, index|
-						@browser.frame(id: 'ifrm').text_field(id: "ctl00_cphAction1_ctl00_txtNameserver#{index + 1}").set(new_ns)
-						hash[:ns_new].push(new_ns)
+					nameservers_new.each_with_index do |ns, index|
+						@browser.frame(id: 'ifrm').text_field(id: "ctl00_cphAction1_ctl00_txtNameserver#{index + 1}").set(ns)
+						ns_new.push(ns)
 					end
 				rescue Exception => e
-					meg = "DOMAIN: #{domain} :: new nameservers -- " + e.to_s
-					hash[:errors].push(msg)
+					errors.push(e.to_s)
 				end
 			end
 
-			unless hash[:errors].nil?
+			# submit new nameserver values
+			unless errors.nil?
 				begin
-					# submit new nameserver values
 					@browser.frame(id: 'ifrm').a(text: 'OK').click
 					@browser.frame(id: 'ifrm').div(id: 'ctl00_cphAction1_ctl01_pnlReadOnly').wait_until_present
 					@browser.frame(id: 'ifrm').a(text: 'OK').click
 				rescue Exception => e
-					msg = "DOMAIN: #{domain} :: submitting namservers -- " + e.to_s
-					hash[:errors].push(msg)
+					errors.push(e.to_s)
 				end
 
-				hash[:change_date] = Time.now
+				domain.updated_at = Time.now
 			end
 
-			# logger.write hash.to_yaml
-			return hash
+			# transfer local variables to domain object
+			domain.go_daddy_errors = errors
+			domain.name_servers_new = ns_new
+			domain.name_servers_old = ns_old
+			
+			return domain.save!
 		end
 
 	end
