@@ -3,7 +3,10 @@ require 'no_daddy'
 
 # MANUAL CONFIGURATIONS
 # ==============================================================================
-new_name_servers = ["cody.ns.cloudflare.com", "lola.ns.cloudflare.com"]
+# new_name_servers = ["nameserver_1", "nameserver_2"]
+new_name_servers = []
+abort("\nNeed to specify new name servers ... exiting") unless new_name_servers.size > 0
+
 
 
 # AUTOMATIC CONFIGURATIONS
