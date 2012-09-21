@@ -10,7 +10,7 @@ module NoDaddy
 			
 			set_db(path, environment)
 
-			puts "batch number = " + @batch.number.to_s
+			# puts "batch number = " + @batch.number.to_s
 		end
 
 		def set_db(p, e)
@@ -25,8 +25,10 @@ module NoDaddy
 		private
 
 			def generate_batch
+				max = NoDaddy::Batch.max(:number) || 0
+				
 				b = Batch.new
-				b.number = NoDaddy::Batch.max(:number) + 1
+				b.number = max + 1
 				b.save! ? @batch = b : false
 			end
 

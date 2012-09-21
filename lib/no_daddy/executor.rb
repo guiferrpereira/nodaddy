@@ -35,8 +35,9 @@ module NoDaddy
 
 			table = @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains')
 
-			table.rows.each do |r|
-				
+			domains_count = table.rows.count
+
+			table.rows.each_with_index do |r, i|
 				domain_model = NoDaddy::Domain.new
 
 				# domain info
@@ -57,9 +58,9 @@ module NoDaddy
 				domain_model.batch = @batch 
 
 				domain_model.save!
-			end
 
-			puts "Number of domains logged = " + table.rows.count.to_s
+				print "#{i} of #{domains_count}" + "\r"
+			end
 		end
 
 		# ----------------------------------------------------------------------------
