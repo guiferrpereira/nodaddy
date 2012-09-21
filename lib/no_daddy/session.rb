@@ -4,12 +4,11 @@ module NoDaddy
 		def initialize(file=nil, env=nil)
 			path 				= file || File.dirname(__FILE__) + "/../../config/mongoid.yml"
 			environment = env  || :development
-			
 			set_db(path, environment)
 		end
 
-		def set_db(p, e)
-			Mongoid.load!(p, e)
+		def set_db(path, environment)
+			Mongoid.load!(path, environment)
 			generate_batch
 		end
 
@@ -21,7 +20,8 @@ module NoDaddy
 		private
 			def generate_batch
 				b = Batch.new
-				b.number = NoDaddy::Batch.max(:number) + 1
+        b.number = 1
+        b.number = NoDaddy::Batch.max(:number) + 1 if NoDaddy::Batch.max(:number)
 				b.save! ? @batch = b : false
 			end
 
