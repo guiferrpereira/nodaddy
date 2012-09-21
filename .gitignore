@@ -5,9 +5,9 @@ test*.rb
 doc/*
 
 .bundle
-*log*.yml
 config/*
-!config/example.yml
+!config/example.godaddy_accounts.yml
+!config/example.mongoid.yml
 
 previous_yml/*.yml
 

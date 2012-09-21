@@ -1,0 +1,6 @@
+development:
+  sessions:
+    default:
+      database: no_daddy
+      hosts:
+        - localhost:27017
