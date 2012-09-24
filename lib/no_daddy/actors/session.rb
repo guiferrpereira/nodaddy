@@ -2,7 +2,7 @@ module NoDaddy
 	class Session
 
 		def initialize(file=nil, env=nil)
-			path 				= file || File.dirname(__FILE__) + "/../../config/mongoid.yml"
+			path 				= file || File.dirname(__FILE__) + "/../../../config/mongoid.yml"
 			environment = env  || :development
 			set_db(path, environment)
 		end
