@@ -29,7 +29,7 @@ Batches are created for each Session class intance.
 #### get_domains    
 Get all domains for each account in ````config/godaddy_accounts.yml````. All saved domains will be accessible via the related __Batch__ object.
 
-		bundle exec ruby receipes/get_domains.rb
+		bundle exec ruby recipes/get_domains.rb
   
 #### change_name_servers
 __NOTE:__ requires running get_doamins.rb first.   
