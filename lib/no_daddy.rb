@@ -3,9 +3,17 @@ require 'mongoid'
 module NoDaddy
 end
 
+
+
 require 'no_daddy/version'
-require 'no_daddy/domain'
-require 'no_daddy/session'
-require 'no_daddy/executor'
-require 'no_daddy/batch'
-require 'no_daddy/account'
+
+# actors
+require 'no_daddy/actors/executor'
+require 'no_daddy/actors/loader'
+require 'no_daddy/actors/session'
+
+# models / objects
+require 'no_daddy/models/account'
+require 'no_daddy/models/batch'
+require 'no_daddy/models/domain'
+require 'no_daddy/models/setting'
