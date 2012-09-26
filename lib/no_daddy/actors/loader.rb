@@ -8,7 +8,7 @@ module NoDaddy
 		def load_domain_settings(file_name=nil)
 			errors = []
 
-			file_name = "/domain_settings.csv" unless file_name
+			file_name = "/domains_settings.csv" unless file_name
 
 			# get all /config/settings/domains_*.rb files
 			current_dir = File.dirname(File.expand_path(__FILE__))
@@ -46,8 +46,8 @@ module NoDaddy
 						ds = DomainSetting.new
 						ds.url = url
 						ds.nameservers = nameservers
-						puts "save = " + ds.save!.to_s
-					end
+						ds.save!
+ 					end
 				end
 			end
 			result = errors.empty? ? true : errors 
