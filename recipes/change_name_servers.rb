@@ -56,8 +56,8 @@ puts "\nSelect name server configurations ... "
 puts "> 0 or  	enter: apply name servers for all domains in batch"
 puts "> 1: load namer server settings from 'config/settings/domain_settings.csv' "
 # ------------------------------------------------------------------------------
-choice = gets
-if choice.to_i == 1
+choice = gets.to_i
+if choice == 1
 	loader = NoDaddy::Loader.new
 	loader.load_domain_settings
 	puts "--  using contents of CSV file"
@@ -98,16 +98,19 @@ batches.each do |batch|
 		# load domains settings
 		if choice == 1
 			puts "domain.url = " + domain.url
+			ds = NoDaddy::DomainSetting.where(url: domain.url).first
 
-			ds = DomainSetting.where(url: domain.url)
-			new_name_servers = ds.name_servers
+			# only change nameservers for domains with a domain setting
+			unless ds.nil?
+				new_name_servers = ds.nameservers
+				executor.change_nameservers(domain, new_name_servers)
+			end
 		
 		# load the global nameserver configs 
 		else
 			new_name_servers = selected_name_servers
+			executor.change_nameservers(domain, new_name_servers)
 		end
-
-		executor.change_nameservers(domain, new_name_servers)
 	end
 
 	batch.finished = true
