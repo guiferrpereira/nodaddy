@@ -67,14 +67,17 @@ module NoDaddy
 
         # find the next button and click it if it's not disabled
         nextButton = @browser.button(:id, 'ctl00_cphMain_DomainList_btnBottomNext')
-        disabled = nextButton.attribute_value("disabled")
-        if disabled.nil?
-          anotherPage = true
-          nextButton.click
-        else
-          anotherPage = false
-        end
-      end while anotherPage == true
+        
+        unless nextButton.nil?
+	        disabled = nextButton.attribute_value("disabled")
+	        if disabled.nil?
+	          anotherPage = true
+	          nextButton.click
+	        else
+	          anotherPage = false
+	        end
+	      end while anotherPage == true
+	    end
 		end
 
 		# ----------------------------------------------------------------------------
