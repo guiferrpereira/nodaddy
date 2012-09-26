@@ -10,10 +10,11 @@ ready_batches = NoDaddy::Batch.all_of( {:ready => true, :finished.in => [nil, fa
 abort('No batches ready to process ... exiting') if ready_batches.count < 1
 
 
-puts "----------------------------------------------------------------"
+puts "--------------------------------------------------------------------"
 puts "NoDaddy"
-puts "\nRecipe: Unlock Domains."
-puts "----------------------------------------------------------------"
+puts "\nRecipe: Domains Transfer Start"
+puts "        Unlock Domains + Send Authorization Code to Email Account."
+puts "--------------------------------------------------------------------"
 
 
 # ------------------------------------------------------------------------------
@@ -110,7 +111,8 @@ batches.each do |batch|
 		executor.goto_domains_list
 		executor.goto_domain_manager(domain.url)
 
-		executor.unlock
+		executor.unlock(domain)
+		executor.send_authorization_code(domain)
 	end
 
 	batch.finished = true

@@ -98,11 +98,33 @@ module NoDaddy
 		# domain manager page methods
 		# ----------------------------------------------------------------------------
 
+		# Send authorization code to GoDaddy account email for transfer. 
+		# 
+		def send_authorization_code(domain)
+			begin
+				# get authorization ifram
+				@browser.a(id: 'ctl00_cphMain_lnkAuthCodeEmail').click
+				@browser.frame(id: 'ifrm').wait_until_present(10)
+				
+				# click OK to send email
+				@browser.frame(id: 'ifrm').link(text: 'OK').click
+				
+				# click OK to get past notification back to domain manage dashboard
+				@browser.frame(id: 'ifrm').link(text: 'OK').click
+				
+				# save state
+				domain.auth_code_sent = true
+			rescue Exception => e
+				puts e.to_s
+			end
+
+			domain.save!
+		end
+
 		# Unlock domain for transfer.
 		# Requires browser to be on the domain manager page.
 		# 
-		def unlock
-			
+		def unlock(domain)
 			# get unlock iframe
 			begin
 				@browser.a(id: 'ctl00_cphMain_lnkDomainLock').click
@@ -116,23 +138,28 @@ module NoDaddy
 			begin
 				checkbox = @browser.frame(id: 'ifrm').checkbox
 
-				# domain is locked
+				# unlocked 'locked' domain
 				if checkbox && checkbox.set?
 					checkbox.clear if checkbox.set?
 					@browser.frame(id: 'ifrm').link(text: 'OK').click
+					domain.unlocked = true
 				
-				# domain is unlocked
+				# do nothing, domain already unlocked
 				elsif checkbox && !checkbox.set?
-					@browser.frame(id: 'ifrm').link(text: 'Cancel').cick
+					@browser.frame(id: 'ifrm').link(text: 'Cancel').click
+					domain.unlocked = true
 				
-				# domain is neither locked nor unlocked
+				# do nothing, domain is not locked or unlocked
 				else
 					puts "domain != locked || unlocked"
+					domain.unlocked = nil
 				end
 
 			rescue Exception => e
 				puts e.to_s
 			end
+
+			domain.save!
 		end
 
 		# Changes the nameservers.
