@@ -85,48 +85,36 @@ proceed = gets.strip
 abort("\nResponded with something other than 'y' ... exiting") unless proceed.eql?("y") || proceed.eql?("Y")
 puts ""
 
-puts "\n\n=======>>>>>> batch operation start"
 
+batches.each do |batch|
 
-# batches.each do |batch|
+	puts "unlocking domains in batch: " + batch.number.to_s
 
-# 	puts "unlocking domains in batch: " + batch.number.to_s
+	# come up with other marking system
+	# # mark batch as stared
+	# # batch.started = true
+	# # batch.save!
 
-# 	# come up with other marking system
-# 	# # mark batch as stared
-# 	# # batch.started = true
-# 	# # batch.save!
+	# create executor
+	executor = NoDaddy::Executor.new(batch)
+	executor.login(batch.account.username, batch.account.password)
 
-# 	# create executor
-# 	executor = NoDaddy::Executor.new(batch)
-# 	executor.login(batch.account.username, batch.account.password)
+	# get selected domains
+	time1 = Time.now
+	time2 = time_frame
+	selected_domains = batch.domains_expiring_between(time1, time2)
 
-# 	batch.domains.each_with_index do |domain, index|
-# 		print "#{index} of #{batch.domains.count}" + "\r"
+	selected_domains.each_with_index do |domain, index|
+		print "#{index} of #{batch.domains.count}" + "\r"
 		
-# 		executor.goto_domains_list
-# 		executor.goto_domain_manager(domain.url)
+		executor.goto_domains_list
+		executor.goto_domain_manager(domain.url)
 
-# 		# load domains settings
-# 		if choice == 1
-# 			puts "domain.url = " + domain.url
-# 			ds = NoDaddy::DomainSetting.where(url: domain.url).first
+		executor.unlock
+	end
 
-# 			# only change nameservers for domains with a domain setting
-# 			unless ds.nil?
-# 				new_name_servers = ds.nameservers
-# 				executor.change_nameservers(domain, new_name_servers)
-# 			end
-		
-# 		# load the global nameserver configs 
-# 		else
-# 			new_name_servers = selected_name_servers
-# 			executor.change_nameservers(domain, new_name_servers)
-# 		end
-# 	end
-
-# 	batch.finished = true
-# 	batch.save!
+	batch.finished = true
+	batch.save!
 	
-# 	puts "changing nameservers for: batch " + batch.number.to_s + " -- finished"
-# end
+	puts "changing nameservers for: batch " + batch.number.to_s + " -- finished"
+end

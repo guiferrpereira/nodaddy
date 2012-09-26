@@ -1,9 +1,6 @@
 require 'watir-webdriver'
 require 'date'
 
-# require 'no_daddy/logging'
-# require 'no_daddy/batch'
-
 module NoDaddy
 	class Executor
 
@@ -44,13 +41,13 @@ module NoDaddy
           domain_model = NoDaddy::Domain.new
 
           # domain info
-          domain_model[:url] 						= r.cells[1].text
-          domain_model[:status] 				= r.cells[3].text
+          domain_model[:url]					= r.cells[1].text
+          domain_model[:status] 			= r.cells[3].text
 
           # Date/Time
           #   listed as -- "9/30/2012"
           #   stored as -- "#<Date: 2001-09-30 ((2452183j,0s,0n),+0s,2299161j)>"
-          domain_model[:expire_date]		= Date.strptime(r.cells[2].text, '%m/%d/%Y')
+          domain_model[:expire_date]	= Date.strptime(r.cells[2].text, '%m/%d/%Y')
           
           # log info
           domain_model[:username]			= @username
@@ -105,6 +102,37 @@ module NoDaddy
 		# Requires browser to be on the domain manager page.
 		# 
 		def unlock
+			
+			# get unlock iframe
+			begin
+				@browser.a(id: 'ctl00_cphMain_lnkDomainLock').click
+				@browser.frame(id: 'ifrm').wait_until_present(10)
+			rescue Exception => e
+				 puts e.to_s
+			end
+
+			# unlock and submit unlocked domains
+			# keep unlocked domains as unlocked
+			begin
+				checkbox = @browser.frame(id: 'ifrm').checkbox
+
+				# domain is locked
+				if checkbox && checkbox.set?
+					checkbox.clear if checkbox.set?
+					@browser.frame(id: 'ifrm').link(text: 'OK').click
+				
+				# domain is unlocked
+				elsif checkbox && !checkbox.set?
+					@browser.frame(id: 'ifrm').link(text: 'Cancel').cick
+				
+				# domain is neither locked nor unlocked
+				else
+					puts "domain != locked || unlocked"
+				end
+
+			rescue Exception => e
+				puts e.to_s
+			end
 		end
 
 		# Changes the nameservers.
@@ -116,7 +144,7 @@ module NoDaddy
 			ns_old = []
 			ns_new = []
 
-			# get name server popup window
+			# get name server iframe
 			unless errors.nil?
 				begin
 					@browser.a(id: 'ctl00_cphMain_lnkNameserverUpdate').click
