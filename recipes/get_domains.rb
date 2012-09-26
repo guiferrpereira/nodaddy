@@ -1,4 +1,4 @@
-#! /bin/ruby
+#!/usr/bin/env ruby
 require 'no_daddy'
 
 file_name = File.dirname(__FILE__) + "/../config/godaddy_accounts.yml"

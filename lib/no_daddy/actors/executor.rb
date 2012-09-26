@@ -33,34 +33,48 @@ module NoDaddy
 		def log_domains
 			goto_domains_list
 
-			table = @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains')
+      anotherPage = false
+      begin
+        @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains').wait_until_present
+        table = @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains')
 
-			domains_count = table.rows.count
+        domains_count = table.rows.count
 
-			table.rows.each_with_index do |r, i|
-				domain_model = NoDaddy::Domain.new
+        table.rows.each_with_index do |r, i|
+          domain_model = NoDaddy::Domain.new
 
-				# domain info
-				domain_model[:url] 						= r.cells[1].text
-				domain_model[:status] 				= r.cells[3].text
+          # domain info
+          domain_model[:url] 						= r.cells[1].text
+          domain_model[:status] 				= r.cells[3].text
 
-				# Date/Time
-				#   listed as -- "9/30/2012"
-				#   stored as -- "#<Date: 2001-09-30 ((2452183j,0s,0n),+0s,2299161j)>"
-				domain_model[:expire_date]		= Date.strptime(r.cells[2].text, '%m/%d/%Y')
-				
-				# log info
-				domain_model[:username]			= @username
-				domain_model[:created_at]		= Time.now
-				domain_model[:updated_at]		= Time.now
+          # Date/Time
+          #   listed as -- "9/30/2012"
+          #   stored as -- "#<Date: 2001-09-30 ((2452183j,0s,0n),+0s,2299161j)>"
+          domain_model[:expire_date]		= Date.strptime(r.cells[2].text, '%m/%d/%Y')
+          
+          # log info
+          domain_model[:username]			= @username
+          domain_model[:created_at]		= Time.now
+          domain_model[:updated_at]		= Time.now
 
-				# related domain to batch process
-				domain_model.batch = @batch 
+          # related domain to batch process
+          domain_model.batch = @batch 
 
-				domain_model.save!
+          domain_model.save!
 
-				print "#{i} of #{domains_count}" + "\r"
-			end
+          print "#{i} of #{domains_count}" + "\r"
+			  end
+
+        # find the next button and click it if it's not disabled
+        nextButton = @browser.button(:id, 'ctl00_cphMain_DomainList_btnBottomNext')
+        disabled = nextButton.attribute_value("disabled")
+        if disabled.nil?
+          anotherPage = true
+          nextButton.click
+        else
+          anotherPage = false
+        end
+      end while anotherPage == true
 		end
 
 		# ----------------------------------------------------------------------------
