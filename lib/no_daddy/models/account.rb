@@ -6,5 +6,7 @@ module NoDaddy
 		
 		field :username, type: String
 		field :password, type: String
+		field :email_username, type: String
+		field :email_password, type: String
 	end
 end

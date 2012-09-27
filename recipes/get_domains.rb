@@ -18,6 +18,9 @@ accounts.each do |account|
 	batch_acc = NoDaddy::Account.new
 	batch_acc.username = account[:username]
 	batch_acc.password = account[:password]
+	batch_acc.email_username	= account[:email_username] 
+	batch_acc.email_password 	= account[:email_password]
+	
 	batch.account = batch_acc
 	batch.save!
 	

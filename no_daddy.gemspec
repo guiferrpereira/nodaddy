@@ -19,4 +19,5 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency 'watir-webdriver'
   gem.add_dependency 'mongoid'
+  gem.add_dependency 'mail'
 end
