@@ -92,7 +92,6 @@ batches.each do |batch|
 	batch.domains.each_with_index do |domain, index|
 		print "#{index} of #{batch.domains.count}" + "\r"
 		
-		executor.goto_domains_list
 		executor.goto_domain_manager(domain.url)
 
 		# load domains settings
