@@ -12,7 +12,7 @@ module NoDaddy
 			@browser = Watir::Browser.new :firefox
 
 			@username = username
-
+      @password = password
 			#login to godaddy
 			@browser.goto "http://godaddy.com"
 			@browser.link(text: "Log In").click
@@ -88,7 +88,10 @@ module NoDaddy
 
 		def goto_domain_manager(domain)
 			goto_domains_list
-			
+		
+      @browser.text_field(:id, 'ctl00_cphMain_DomainList_txtJumpTo').set domain
+      @browser.input(:id, 'ctl00_cphMain_DomainList_btnGo').click
+      @browser.a(text: domain).wait_until_present
 			@browser.a(text: domain).click
 			@browser.input(value: domain).wait_until_present
 		end
@@ -170,6 +173,13 @@ module NoDaddy
 			errors = []
 			ns_old = []
 			ns_new = []
+
+      if (rand()*30).to_i == 15
+        @browser.close
+        self.login(@username, @password)
+        sleep 1
+        self.goto_domain_manager(domain.url)
+      end
 
 			# get name server iframe
 			unless errors.nil?
