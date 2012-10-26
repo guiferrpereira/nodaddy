@@ -60,21 +60,26 @@ module NoDaddy
           domain_model.save!
 
           print "#{i} of #{domains_count}" + "\r"
-			  end
+        end
 
         # find the next button and click it if it's not disabled
         nextButton = @browser.button(:id, 'ctl00_cphMain_DomainList_btnBottomNext')
-        
-        unless nextButton.nil?
+        if nextButton.nil?
+          STDERR.puts "is nil"
+        else
 	        disabled = nextButton.attribute_value("disabled")
+          STDERR.puts "disabled: #{disabled.inspect}"
 	        if disabled.nil?
+            STDERR.puts "Go to next button"
 	          anotherPage = true
 	          nextButton.click
 	        else
+            STDERR.puts "Button is disabled"
 	          anotherPage = false
 	        end
-	      end while anotherPage == true
-	    end
+        end
+	    end while anotherPage == true
+      STDERR.puts "anotherPage #{anotherPage}"
 		end
 
 		# ----------------------------------------------------------------------------

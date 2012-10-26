@@ -9,7 +9,7 @@ module NoDaddy
 
 		def set_db(path, environment)
 			Mongoid.load!(path, environment)
-			self.generate_batch
+			generate_batch
 		end
 
 		def batch
@@ -17,7 +17,7 @@ module NoDaddy
 		end
 
 
-    def self.generate_batch
+    def generate_batch
       b = Batch.new
       b.number = 1
       b.number = NoDaddy::Batch.max(:number) + 1 if NoDaddy::Batch.max(:number)
