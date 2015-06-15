@@ -12,15 +12,15 @@ module NoDaddy
 
     def login(username, password)
       @browser = Capybara::Session.new(:poltergeist)
-
       @username = username
       @password = password
+
       #login to godaddy
       @browser.visit "http://godaddy.com"
       @browser.find(:xpath, "//div[@id='sign-in']/a").click
 
-      @browser.find(:xpath, "//form[@id='loginForm']").fill_in "loginname", with: username
-      @browser.find(:xpath, "//form[@id='loginForm']").fill_in "password", with: password
+      @browser.find(:xpath, "//form[@id='loginForm']").fill_in "loginname", with: @username
+      @browser.find(:xpath, "//form[@id='loginForm']").fill_in "password", with: @password
 
       @browser.find(:xpath, "//form[@id='loginForm']/input[@type='submit']").click
     end
@@ -37,22 +37,21 @@ module NoDaddy
       anotherPage = false
       begin
         # @browser.find(:xpath, "//div[@id='allGrid']/div/table")
-        # @browser.all(:xpath, "//div[@id='allGrid']//tr")
-        table = @browser.table(id: 'ctl00_cphMain_DomainList_gvDomains')
+        # table = @browser.all(:xpath, "//div[@id='allGrid']//tr")
+        table = @browser.all(:xpath, "//div[@id='allGrid']//div[@id='main_scroller']/table/tbody/tr")
 
-        domains_count = table.rows.count
+        domains_count = table.count
 
-        table.rows.each_with_index do |r, i|
+        table.each_with_index do |row, i|
           domain_model = NoDaddy::Domain.new
 
-          # domain info
-          domain_model[:url]          = r.cells[1].text
-          domain_model[:status]       = r.cells[3].text
+          r = row.text.split(" ")
 
-          # Date/Time
-          #   listed as -- "9/30/2012"
-          #   stored as -- "#<Date: 2001-09-30 ((2452183j,0s,0n),+0s,2299161j)>"
-          domain_model[:expire_date]  = Date.strptime(r.cells[2].text, '%m/%d/%Y')
+          # domain info
+          domain_model[:url]          = r[0]
+          domain_model[:status]       = r[2]
+
+          domain_model[:expire_date]  = Date.strptime(r[1], '%d-%m-%Y')
 
           # log info
           domain_model[:username]     = @username
@@ -68,10 +67,11 @@ module NoDaddy
         end
 
         # find the next button and click it if it's not disabled
-        nextButton = @browser.button(:id, 'ctl00_cphMain_DomainList_btnBottomNext')
-        if nextButton.nil?
+        if @browser.has_no_button? "ctl00_cphMain_DomainList_btnBottomNext"
           STDERR.puts "is nil"
         else
+          nextButton = @browser.find_button("ctl00_cphMain_DomainList_btnBottomNext")
+
           disabled = nextButton.attribute_value("disabled")
           STDERR.puts "disabled: #{disabled.inspect}"
           if disabled.nil?
@@ -97,13 +97,17 @@ module NoDaddy
     end
 
     def goto_domain_manager(domain)
-      goto_domains_list
+      @browser.visit "https://dns.godaddy.com/ZoneFile.aspx?zone=#{domain}&zoneType=0&refer=dcc&prog_id=GoDaddy"
 
-      @browser.text_field(:id, 'ctl00_cphMain_DomainList_txtJumpTo').set domain
-      @browser.input(:id, 'ctl00_cphMain_DomainList_btnGo').click
-      @browser.a(text: domain).wait_until_present
-      @browser.a(text: domain).click
-      @browser.input(value: domain).wait_until_present
+
+      # add record
+      @browser.find(:xpath, "//div[@id='divAddRecord']").click
+
+      # @browser.text_field(:id, 'ctl00_cphMain_DomainList_txtJumpTo').set domain
+      # @browser.input(:id, 'ctl00_cphMain_DomainList_btnGo').click
+      # @browser.a(text: domain).wait_until_present
+      # @browser.a(text: domain).click
+      # @browser.input(value: domain).wait_until_present
     end
 
 

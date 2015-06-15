@@ -10,7 +10,7 @@ accounts.each do |account|
 
 	# start session
 	session = NoDaddy::Session.new
-	
+
 	# retrieve create batch
 	batch = session.batch
 
@@ -18,12 +18,14 @@ accounts.each do |account|
 	batch_acc = NoDaddy::Account.new
 	batch_acc.username = account[:username]
 	batch_acc.password = account[:password]
-	batch_acc.email_username	= account[:email_username] 
+	batch_acc.email_username	= account[:email_username]
 	batch_acc.email_password 	= account[:email_password]
-	
+
 	batch.account = batch_acc
 	batch.save!
-	
+
+	NoDaddy::Domain.destroy_all
+
 	# create executor
 	executor = NoDaddy::Executor.new(batch)
 
@@ -36,12 +38,17 @@ accounts.each do |account|
 	# log domains
 	executor.goto_domains_list
 	executor.log_domains
-	
+
+
+	NoDaddy::Domain.all.each do |domain|
+		puts domain.url
+	end
+
 	# make batch ready to process
 	batch.ready = true
 	batch.save!
 
-	puts "logging: batch " + batch.number.to_s + " - " + batch.account.username + " -- finished"	
+	puts "logging: batch " + batch.number.to_s + " - " + batch.account.username + " -- finished"
 end
 
 
