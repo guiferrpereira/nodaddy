@@ -12,6 +12,7 @@ module NoDaddy
 
     def login(username, password)
       @browser = Capybara::Session.new(:poltergeist)
+
       @username = username
       @password = password
 
@@ -36,8 +37,6 @@ module NoDaddy
 
       anotherPage = false
       begin
-        # @browser.find(:xpath, "//div[@id='allGrid']/div/table")
-        # table = @browser.all(:xpath, "//div[@id='allGrid']//tr")
         table = @browser.all(:xpath, "//div[@id='allGrid']//div[@id='main_scroller']/table/tbody/tr")
 
         domains_count = table.count
@@ -100,6 +99,8 @@ module NoDaddy
       @browser.visit "https://dns.godaddy.com/ZoneFile.aspx?zone=#{domain}&zoneType=0&refer=dcc&prog_id=GoDaddy"
     end
 
+    # Available types:
+    # A (Host), CNAME (Alias), MX (Mailer Exchanger), TXT (Text), AAAA (IPv6 Host), NS (Nameserver)
     def add_new_record record_name, ip_address, type="A (Host)"
       @browser.find(:xpath, "//div[@id='divAddRecord']").click
 
@@ -111,11 +112,29 @@ module NoDaddy
         inputs[0].set record_name
         inputs[1].set ip_address
 
-        links = @browser.all(:xpath, "//a")
-        links[0].click
+        @browser.all(:xpath, "//a")[0].click
       end
 
+      self.save_zone_file
+    end
+
+    # Available types: A / CNAME / MX / TXT / AAAA / NS
+    # tblARecords, tblCNAMERecords, tblMXRecords, tblTXTRecords, tblAAAARecords, tblNSRecords
+    def delete_record record_name, ip_address, type="tblARecords"
+      @browser.all(:xpath, "//table[@id='tblARecords']/tbody/tr").each do |tr|
+        values = tr.text.split(" ")
+        tr.find("input").set "true" if values[0] == record_name && values[1] == ip_address
+      end
+
+      @browser.find(:xpath, "//div[@id='divDelete']").click
+
+      self.save_zone_file
+    end
+
+    def save_zone_file
       @browser.find_link("Save Zone File", match: :first).click
+
+      sleep 1
 
       @browser.find_link("modalOkTwo").click
     end
