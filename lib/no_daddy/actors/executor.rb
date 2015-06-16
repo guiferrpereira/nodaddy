@@ -98,16 +98,26 @@ module NoDaddy
 
     def goto_domain_manager(domain)
       @browser.visit "https://dns.godaddy.com/ZoneFile.aspx?zone=#{domain}&zoneType=0&refer=dcc&prog_id=GoDaddy"
+    end
 
-
-      # add record
+    def add_new_record record_name, ip_address, type="A (Host)"
       @browser.find(:xpath, "//div[@id='divAddRecord']").click
 
-      # @browser.text_field(:id, 'ctl00_cphMain_DomainList_txtJumpTo').set domain
-      # @browser.input(:id, 'ctl00_cphMain_DomainList_btnGo').click
-      # @browser.a(text: domain).wait_until_present
-      # @browser.a(text: domain).click
-      # @browser.input(value: domain).wait_until_present
+      @browser.within_frame("ifrm") do
+        @browser.select(type)
+
+        inputs = @browser.all(:xpath, "//input[@type='text']")
+
+        inputs[0].set record_name
+        inputs[1].set ip_address
+
+        links = @browser.all(:xpath, "//a")
+        links[0].click
+      end
+
+      @browser.find_link("Save Zone File", match: :first).click
+
+      @browser.find_link("modalOkTwo").click
     end
 
 
